@@ -1,10 +1,12 @@
 io.stdout:setvbuf('no')
 
 function love.load()
+  math.randomseed(os.time())
+
   love.window.setMode(640, 640)
 
 --Liczba trójkątów:
-  NO_TRIANGLES = 20
+  NO_TRIANGLES = 40
 
 --Czemu LUA nie ma enum?
   UP = "up"
@@ -59,8 +61,8 @@ function love.load()
   player = {
     x = 10,
     y = 10,
-    act_x = 256,
-    act_y = 256,
+    act_x = 320,
+    act_y = 320,
     speed = 10
   }
 
@@ -83,67 +85,37 @@ function love.load()
     self.y = y
     self.id = id
     self.direction = direction
+    self.act_x = x*32
+    self.act_y = y*32
     return self
   end
 
-  function triangle.setX(self, x)
-    self.x = x
-  end
-
-  function triangle.setY(self, y)
-    self.y = y
-  end
-
-  function triangle.setDirection(self, direction)
-    self.direction = direction
-  end
-
-  function triangle.setActX(self, act_x)
-    self.act_x = act_x
-  end
-
-  function triangle.setActY(self, act_y)
-    self.act_y = act_y
-  end
-
   tableOfTriangles = {}
-
+  worldmap[player.x][player.y] = PLAYER
   initTriangles()
 
-  worldmap[player.x][player.y] = PLAYER
 end
 
-function initTriangles()
-  math.randomseed(os.time())
-  tableOfCoords = {}
-
-
-  for i = 1, NO_TRIANGLES do
-    point = {}
-
-    randX = 10
-    while randX == 9 or randX == 10 or randX == 11 do
-      randX = math.random(1,18)
+function getRandomNumber()
+    rnd = math.random(1,2)
+    if rnd == 1 then
+      return math.random(1,8)
+    else
+      return math.random(12,19)
     end
+end
 
-    point.x = randX
-    randY = 10
-    point.y = randY
-    table.insert(tableOfCoords, point)
 
---Manualne sprawdzanie czy punkty, w których będą trójkąty są unikatowe
-    uniquePoint = false
-    while (randY == 9 or randY == 10 or randY == 11 or not uniquePoint) do
-      randY = math.random(1,18)
-      uniquePoint = true
-      for k, v in pairs(tableOfCoords) do
-        if v.x == point.x and v.y == randY then
-          uniquePoint = false
-        end
-      end
-      table.insert(tableOfCoords, point)
+function initTriangles()
+  for i = 1, NO_TRIANGLES do
+    randX = getRandomNumber()
+    randY = getRandomNumber()
+    while worldmap[randX][randY] ~= EMPTY do
+      randX = getRandomNumber()
+      randY = getRandomNumber()
     end
     table.insert(tableOfTriangles, triangle.new(randX, randY, i + 2, randomDirection()) )
+    worldmap[randX][randY] = i + 2
   end
 end  
 
@@ -165,6 +137,12 @@ function love.update(dt)
 --Piękna animacja. Z tutoriala.
   player.act_x = player.act_x - ((player.act_x - (player.x * 32)) * player.speed * dt)
   player.act_y = player.act_y - ((player.act_y - (player.y * 32)) * player.speed * dt)
+  
+  for k, v in pairs(tableOfTriangles) do
+  v.act_x = v.act_x - ((v.act_x - (v.x * 32)) * v.speed * dt)
+  v.act_y = v.act_y - ((v.act_y - (v.y * 32)) * v.speed * dt)    
+  end
+  
 end
 
 function love.draw()
@@ -173,13 +151,13 @@ function love.draw()
   for i = 1, #tableOfTriangles do
     tmp = tableOfTriangles[i]
     if tmp.direction == RIGHT then
-      love.graphics.polygon("fill", tmp.x * 32, tmp.y * 32, tmp.x * 32, ((tmp.y+1) * 32), ((tmp.x + 1) * 32), (tmp.y*32 +16))
+      love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y +16)
     elseif tmp.direction == DOWN then
-      love.graphics.polygon("fill", tmp.x * 32, tmp.y * 32, (tmp.x + 1) * 32, tmp.y * 32, (tmp.x *32 + 16), ((tmp.y+1)*32))
+      love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x + 32, tmp.act_y, tmp.act_x + 16, tmp.act_y +32)
     elseif tmp.direction == LEFT then
-      love.graphics.polygon("fill", (tmp.x + 1) * 32, tmp.y * 32, (tmp.x+1) * 32, (tmp.y + 1)* 32, tmp.x * 32, tmp.y*32+16)
+      love.graphics.polygon("fill", tmp.act_x + 32, tmp.act_y, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x, tmp.act_y+16)
     elseif tmp.direction == UP then
-      love.graphics.polygon("fill", tmp.x * 32, (tmp.y+1) * 32, (tmp.x + 1) * 32, ((tmp.y +1 )* 32), (tmp.x *32 + 16), tmp.y*32)
+      love.graphics.polygon("fill", tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x + 16, tmp.act_y)
     end
   end
 
@@ -205,24 +183,33 @@ end
 
 function moveTriangles()
   for k, v in pairs(tableOfTriangles) do
+    io.write("v.x: ", v.x, " v.y: ", v.y, "\n")
     if v.direction == UP then
-      if v.y > 1 then
+      if worldmap[v.x][v.y-1] == EMPTY then
+        worldmap[v.x][v.y] = EMPTY
         v.y = v.y -1
+        worldmap[v.x][v.y] = v.id
       end
       v.direction = randomDirection()
     elseif v.direction == DOWN then
-      if v.y < 18 then
+      if worldmap[v.x][v.y+1] == EMPTY then
+        worldmap[v.x][v.y] = EMPTY
         v.y = v.y + 1
+        worldmap[v.x][v.y] = v.id
       end
       v.direction = randomDirection()
     elseif v.direction == LEFT then
-      if v.x > 1 then
+      if worldmap[v.x-1][v.y] == EMPTY then
+        worldmap[v.x][v.y] = EMPTY
         v.x = v.x - 1
+        worldmap[v.x][v.y] = v.id
       end
       v.direction = randomDirection()
     elseif v.direction == RIGHT then
-      if v.x < 18 then
+      if worldmap[v.x+1][v.y] == EMPTY then
+        worldmap[v.x][v.y] = EMPTY
         v.x = v.x + 1
+        worldmap[v.x][v.y] = v.id
       end
       v.direction = randomDirection()
     end
@@ -240,13 +227,11 @@ function love.keypressed(key)
     if (worldmap[player.x][player.y-1] ~= WALL) then
       movement[UP]()
       moveTriangles()
-
     end
   elseif key == "left" then
     if (worldmap[player.x-1][player.y] ~= WALL) then
       movement[LEFT]()
       moveTriangles()
-
     end
   elseif key == "right" then
     if (worldmap[player.x+1][player.y] ~= WALL) then
