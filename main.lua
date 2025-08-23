@@ -6,7 +6,7 @@ function love.load()
   love.window.setMode(640, 640)
 
 --Liczba trójkątów:
-  NO_TRIANGLES = 40
+  NO_TRIANGLES = 80
 
 --Czemu LUA nie ma enum?
   UP = "up"
@@ -183,7 +183,6 @@ end
 
 function moveTriangles()
   for k, v in pairs(tableOfTriangles) do
-    io.write("v.x: ", v.x, " v.y: ", v.y, "\n")
     if v.direction == UP then
       if worldmap[v.x][v.y-1] == EMPTY then
         worldmap[v.x][v.y] = EMPTY
