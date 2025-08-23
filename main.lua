@@ -5,15 +5,18 @@ function love.load()
 
   love.window.setMode(640, 640)
 
--- shader additions
+  -- shader additions
   startTime = love.timer.getTime()
   crtShader = love.graphics.newShader("crt.glsl")
   canvas = love.graphics.newCanvas(640, 640, { type = '2d', readable = true })
 
---Liczba trójkątów:
+  -- load move sound
+  moveSound = love.audio.newSource("sounds/moveit.mp3", "static")
+
+  --Liczba trójkątów:
   NO_TRIANGLES = 40
 
---Czemu LUA nie ma enum?
+  --Czemu LUA nie ma enum?
   UP = "up"
   DOWN = "down"
   LEFT = "left"
@@ -22,14 +25,7 @@ function love.load()
   WALL = 1
   PLAYER = 2
 
---0 - empty
---1 - walls
---2 - player
---3+ - enemy
-
---Szmeksi LUA table magic, mogłaby być bardziej ale nie chce mi się
   movement = {}
-
   movement[UP] = function()
     player.y = player.y - 1
     worldmap[player.x][player.y+1] = EMPTY
@@ -51,7 +47,6 @@ function love.load()
     worldmap[player.x][player.y] = PLAYER  
   end
 
---Inicjalizuje mapę jako grid 20x20 
   worldmap = {}
   for i = 0, 19 do 
     worldmap[i] = {}
@@ -81,7 +76,6 @@ function love.load()
     act_y
   }
 
---CZEMU LUA NIE MA KLAS
   triangle.__index = triangle
 
   function triangle.new(x, y, id, direction)
@@ -98,7 +92,6 @@ function love.load()
   tableOfTriangles = {}
   worldmap[player.x][player.y] = PLAYER
   initTriangles()
-
 end
 
 function getRandomNumber()
@@ -109,7 +102,6 @@ function getRandomNumber()
       return math.random(12,19)
     end
 end
-
 
 function initTriangles()
   for i = 1, NO_TRIANGLES do
@@ -137,26 +129,24 @@ function randomDirection()
   end  
 end
 
-
 function love.update(dt)
---Piękna animacja. Z tutoriala.
   player.act_x = player.act_x - ((player.act_x - (player.x * 32)) * player.speed * dt)
   player.act_y = player.act_y - ((player.act_y - (player.y * 32)) * player.speed * dt)
   
   for k, v in pairs(tableOfTriangles) do
-  v.act_x = v.act_x - ((v.act_x - (v.x * 32)) * v.speed * dt)
-  v.act_y = v.act_y - ((v.act_y - (v.y * 32)) * v.speed * dt)    
+    v.act_x = v.act_x - ((v.act_x - (v.x * 32)) * v.speed * dt)
+    v.act_y = v.act_y - ((v.act_y - (v.y * 32)) * v.speed * dt)    
   end
-  
 end
 
 function love.draw()
-  -- draw to canvas
   love.graphics.setCanvas(canvas)
   love.graphics.clear(0, 0, 0, 1)
 
+  love.graphics.setColor(0.878, 0.773, 0.157, 1)
   love.graphics.rectangle("fill", player.act_x, player.act_y, 32, 32)
-
+  love.graphics.setColor(1, 1, 1, 1)
+  
   for i = 1, #tableOfTriangles do
     tmp = tableOfTriangles[i]
     if tmp.direction == RIGHT then
@@ -169,7 +159,6 @@ function love.draw()
       love.graphics.polygon("fill", tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x + 16, tmp.act_y)
     end
   end
-
 
   for x=0, #worldmap do
     for y=0, #worldmap[x] do
@@ -187,20 +176,8 @@ function love.draw()
   love.graphics.setShader()
 end
 
---Do debugowania, nie czytać
-function showMatrix()
-  for y = 0, #worldmap do
-    for x = 0, #worldmap[y] do
-      io.write(worldmap[x][y])
-    end
-    io.write("\n")
-  end
-  io.write("\n\n")
-end
-
 function moveTriangles()
   for k, v in pairs(tableOfTriangles) do
-    io.write("v.x: ", v.x, " v.y: ", v.y, "\n")
     if v.direction == UP then
       if worldmap[v.x][v.y-1] == EMPTY then
         worldmap[v.x][v.y] = EMPTY
@@ -233,27 +210,36 @@ function moveTriangles()
   end
 end
 
---Ruch z wykrywaniem kolizji
+-- helper to play overlapping sound
+function playMoveSound()
+  local s = moveSound:clone()
+  s:play()
+end
+
 function love.keypressed(key)  
   if key == "down" then
     if (worldmap[player.x][player.y+1] ~= WALL) then
       movement[DOWN]()
       moveTriangles()
+      playMoveSound()
     end
   elseif key == "up" then
     if (worldmap[player.x][player.y-1] ~= WALL) then
       movement[UP]()
       moveTriangles()
+      playMoveSound()
     end
   elseif key == "left" then
     if (worldmap[player.x-1][player.y] ~= WALL) then
       movement[LEFT]()
       moveTriangles()
+      playMoveSound()
     end
   elseif key == "right" then
     if (worldmap[player.x+1][player.y] ~= WALL) then
       movement[RIGHT]()      
       moveTriangles()
+      playMoveSound()
     end
   end
 end
