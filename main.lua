@@ -5,6 +5,11 @@ function love.load()
 
   love.window.setMode(640, 640)
 
+-- shader additions
+  startTime = love.timer.getTime()
+  crtShader = love.graphics.newShader("crt.glsl")
+  canvas = love.graphics.newCanvas(640, 640, { type = '2d', readable = true })
+
 --Liczba trójkątów:
   NO_TRIANGLES = 40
 
@@ -146,6 +151,10 @@ function love.update(dt)
 end
 
 function love.draw()
+  -- draw to canvas
+  love.graphics.setCanvas(canvas)
+  love.graphics.clear(0, 0, 0, 1)
+
   love.graphics.rectangle("fill", player.act_x, player.act_y, 32, 32)
 
   for i = 1, #tableOfTriangles do
@@ -169,7 +178,15 @@ function love.draw()
       end
     end
   end
+
+  love.graphics.setCanvas()
+  love.graphics.setColor(1, 1, 1)
+  crtShader:send('millis', love.timer.getTime() - startTime)
+  love.graphics.setShader(crtShader)
+  love.graphics.draw(canvas, 0, 0)
+  love.graphics.setShader()
 end
+
 --Do debugowania, nie czytać
 function showMatrix()
   for y = 0, #worldmap do
