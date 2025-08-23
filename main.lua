@@ -16,7 +16,6 @@ function love.load()
   -- load move sound
   moveSound = love.audio.newSource("sounds/moveit.mp3", "static")
 
-
   --Czemu LUA nie ma enum?
   UP = 0
   DOWN = 180
@@ -97,22 +96,17 @@ function love.load()
   initTriangles()
 end
 
-function getRandomNumber()
-    rnd = math.random(1,2)
-    if rnd == 1 then
-      return math.random(1,8)
-    else
-      return math.random(12,19)
-    end
-end
-
 function initTriangles()
   for i = 1, NO_TRIANGLES do
-    randX = getRandomNumber()
-    randY = getRandomNumber()
-    while worldmap[randX][randY] ~= EMPTY do
-      randX = getRandomNumber()
-      randY = getRandomNumber()
+    randX = math.random(1,18)
+    randY = math.random(1,18)
+    while worldmap[randX][randY] ~= EMPTY or
+          (randX == 9 and (randY == 9 or randY == 10 or randY == 11)) or
+          (randX == 10 and (randY == 9 or randY == 10 or randY == 11)) or
+          (randX == 11 and (randY == 9 or randY == 10 or randY == 11)) 
+    do
+      randX = math.random(1,18)
+      randY = math.random(1,18)
     end
     table.insert(tableOfTriangles, triangle.new(randX, randY, i + 2, randomDirection()) )
     worldmap[randX][randY] = i + 2
@@ -161,15 +155,6 @@ function love.draw()
                           (tmp.act_x+16) + 16 * math.cos(math.rad(tmp.act_angle+240)),
                           (tmp.act_y+16) + 16 * math.sin(math.rad(tmp.act_angle+240))
                           )
- --   if tmp.direction == RIGHT then
- --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y +16)
- --   elseif tmp.direction == DOWN then
- --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x + 32, tmp.act_y, tmp.act_x + 16, tmp.act_y +32)
- --   elseif tmp.direction == LEFT then
- --     love.graphics.polygon("fill", tmp.act_x + 32, tmp.act_y, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x, tmp.act_y+16)
- --   elseif tmp.direction == UP then
- --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x + 16, tmp.act_y)
---  end
   end
 
   for x=0, #worldmap do
