@@ -3,7 +3,7 @@ io.stdout:setvbuf('no')
 function love.load()
   math.randomseed(os.time())
 
-  love.window.setMode(640, 640)
+  love.window.setMode(640, 660)
 
 --Liczba trójkątów:
   NO_TRIANGLES = 80
@@ -11,7 +11,7 @@ function love.load()
   -- shader additions
   startTime = love.timer.getTime()
   crtShader = love.graphics.newShader("crt.glsl")
-  canvas = love.graphics.newCanvas(640, 640, { type = '2d', readable = true })
+  canvas = love.graphics.newCanvas(640, 660, { type = '2d', readable = true })
 
   -- load move sound
   moveSound = love.audio.newSource("sounds/moveit.mp3", "static")
@@ -24,6 +24,8 @@ function love.load()
   EMPTY = 0
   WALL = 1
   PLAYER = 2
+  
+  score = 0
 
   movement = {}
   movement[UP] = function()
@@ -144,6 +146,8 @@ function love.draw()
   love.graphics.setColor(0.878, 0.773, 0.157, 1)
   love.graphics.rectangle("fill", player.act_x, player.act_y, 32, 32)
   love.graphics.setColor(1, 1, 1, 1)
+  
+  love.graphics.print("SCORE: "..tostring(score), 20, 640)
   
   for i = 1, #tableOfTriangles do
     tmp = tableOfTriangles[i]
