@@ -18,10 +18,10 @@ function love.load()
 
 
   --Czemu LUA nie ma enum?
-  UP = "up"
-  DOWN = "down"
-  LEFT = "left"
-  RIGHT = "right"
+  UP = 0
+  DOWN = 180
+  LEFT = 270
+  RIGHT = 90
   EMPTY = 0
   WALL = 1
   PLAYER = 2
@@ -74,7 +74,8 @@ function love.load()
     direction,
     speed = 10,
     act_x,
-    act_y
+    act_y,
+    act_angle
   }
 
   triangle.__index = triangle
@@ -87,6 +88,7 @@ function love.load()
     self.direction = direction
     self.act_x = x*32
     self.act_y = y*32
+    self.act_angle = direction
     return self
   end
 
@@ -136,7 +138,8 @@ function love.update(dt)
   
   for k, v in pairs(tableOfTriangles) do
     v.act_x = v.act_x - ((v.act_x - (v.x * 32)) * v.speed * dt)
-    v.act_y = v.act_y - ((v.act_y - (v.y * 32)) * v.speed * dt)    
+    v.act_y = v.act_y - ((v.act_y - (v.y * 32)) * v.speed * dt)
+    v.act_angle = v.act_angle - (v.act_angle - v.direction) * dt * v.speed
   end
 end
 
@@ -150,15 +153,23 @@ function love.draw()
   
   for i = 1, #tableOfTriangles do
     tmp = tableOfTriangles[i]
-    if tmp.direction == RIGHT then
-      love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y +16)
-    elseif tmp.direction == DOWN then
-      love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x + 32, tmp.act_y, tmp.act_x + 16, tmp.act_y +32)
-    elseif tmp.direction == LEFT then
-      love.graphics.polygon("fill", tmp.act_x + 32, tmp.act_y, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x, tmp.act_y+16)
-    elseif tmp.direction == UP then
-      love.graphics.polygon("fill", tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x + 16, tmp.act_y)
-    end
+    love.graphics.polygon("fill",
+                          (tmp.act_x+16) + 16 * math.cos(math.rad(tmp.act_angle)),
+                          (tmp.act_y+16) + 16 * math.sin(math.rad(tmp.act_angle)),
+                          (tmp.act_x+16) + 16 * math.cos(math.rad(tmp.act_angle+120)),
+                          (tmp.act_y+16) + 16 * math.sin(math.rad(tmp.act_angle+120)),
+                          (tmp.act_x+16) + 16 * math.cos(math.rad(tmp.act_angle+240)),
+                          (tmp.act_y+16) + 16 * math.sin(math.rad(tmp.act_angle+240))
+                          )
+ --   if tmp.direction == RIGHT then
+ --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y +16)
+ --   elseif tmp.direction == DOWN then
+ --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y, tmp.act_x + 32, tmp.act_y, tmp.act_x + 16, tmp.act_y +32)
+ --   elseif tmp.direction == LEFT then
+ --     love.graphics.polygon("fill", tmp.act_x + 32, tmp.act_y, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x, tmp.act_y+16)
+ --   elseif tmp.direction == UP then
+ --     love.graphics.polygon("fill", tmp.act_x, tmp.act_y + 32, tmp.act_x + 32, tmp.act_y + 32, tmp.act_x + 16, tmp.act_y)
+--  end
   end
 
   for x=0, #worldmap do
