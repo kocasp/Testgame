@@ -17,10 +17,10 @@ function love.load()
   moveSound = love.audio.newSource("sounds/moveit.mp3", "static")
 
   --Czemu LUA nie ma enum?
-  UP = 0
-  DOWN = 180
-  LEFT = 270
-  RIGHT = 90
+  UP = 270
+  DOWN = 90
+  LEFT = 180
+  RIGHT = 0
   EMPTY = 0
   WALL = 1
   PLAYER = 2
